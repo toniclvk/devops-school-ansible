@@ -1,0 +1,27 @@
+---
+- hosts: nodes
+  vars:
+   grub_path: /etc/default/grub
+  tasks:
+  - name: Check exist parameters biosdevname and net.ifnames in /etc/default/grub 
+    lineinfile:
+      path: "{{grub_path}}"
+      state: present
+      regexp: (GRUB_CMDLINE_LINUX=\".*?)(\s*{{ item }}=\d+)(.*\")$
+      line: '\g<1>\g<3>'
+      backrefs: yes
+    loop:
+      - biosdevname
+      - net\.ifnames
+  - name: Adding parameters
+    lineinfile:
+      path: "{{grub_path}}"
+      state: present
+      regexp: '^(GRUB_CMDLINE_LINUX=\".*)(\")$'
+      line: '\g<1> {{ item }}\g<2>'
+      backrefs: yes
+    loop:
+      - biosdevname=0
+      - net.ifnames=0
+  - name: Save config
+    command: grub2-mkconfig -o /boot/grub2/grub.cfg
