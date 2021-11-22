@@ -1,0 +1,66 @@
+---
+  - name: Check {{ ftpserver }}
+    yum:
+      name: "{{ ftpserver }}"
+      state: present
+  - name: Check service
+    service:
+      name: "{{ ftpserver }}" 
+      state: started
+      enabled: yes
+  - name: Check SElinux utils
+    yum:
+      name: policycoreutils-python-utils
+      state: present
+  - name: Enable SELinux
+    selinux:
+      policy: targeted
+      state: enforcing
+  - name: Reboot server
+    reboot:
+      msg: "Reboot initiated by Ansible"
+      connect_timeout: 5
+      reboot_timeout: 600
+      pre_reboot_delay: 0
+      post_reboot_delay: 30
+      test_command: whoami
+  - name: Create ftp pub directory
+    file:
+      state: directory
+      path: "{{ ftp_pub_dir }}"
+      mode: '755'
+      setype: public_content_rw_t
+  - name: Create ftp upload directory
+    file:
+      state: directory
+      path: "{{ ftp_upload_dir }}"
+      mode: '777'
+      setype: public_content_rw_t
+  - name: Set {{ ftp_write_mode_name }} flag {{ ftp_write_mode }}
+    seboolean:
+      name: "{{ ftp_write_mode_name }}"
+      state: "{{ ftp_write_mode }}"
+      persistent: yes
+  - name: Create cfg file 
+    template:
+      src: ftptemplate.j2
+      dest: "{{ ftp_config_path }}"
+    notify:
+    - Restart ftp server
+  - name: Check {{ firewall }}
+    yum:
+      name: "{{ firewall }}"
+      state: present
+  - name: Check {{ firewall }} service
+    service:
+      name: "{{ firewall }}"
+      state: started
+      enabled: yes
+  - name: Open port
+    firewalld:
+      service: "{{ ftp_port }}"
+      permanent: true
+      state: enabled
+    when: firewall == "firewalld"
+    notify:
+    - Restart firewall

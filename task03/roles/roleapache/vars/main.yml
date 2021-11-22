@@ -1,0 +1,5 @@
+---
+webserver: httpd
+firewall: firewalld
+web_index_path: /var/www/html/index.html
+web_port: http

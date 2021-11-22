@@ -1,0 +1,5 @@
+---
+- hosts: node1.example.com
+  roles:
+    - role: roleapache
+      when: ansible_facts['distribution'] == "CentOS"

@@ -1,0 +1,5 @@
+---
+- hosts: nodes
+  roles:
+    - role: roleftp
+      when: ansible_facts['distribution'] == "CentOS"
